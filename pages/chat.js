@@ -41,7 +41,11 @@ export default function ChatPage() {
     setMessages(prev => [...prev, ...botMsg]);
   };
 
-  const getBotReply = (input) => {
-    const msg = input.toLowerCase();
-    if (msg.includes('
+ const getBotReply = (input) => {
+  const msg = input.toLowerCase();
+  if (msg.includes('sad')) return "I'm here for you. Want to talk about it?";
+  if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊 How are you feeling today?";
+  if (msg.includes('happy')) return "Yay! I'm glad to hear that! 🌟";
+  return "Tell me more...";
+};
 
