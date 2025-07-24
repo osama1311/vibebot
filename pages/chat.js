@@ -21,7 +21,6 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (message.trim() === '') return;
 
-    // Save user's message
     const { data: userMsg } = await supabase
       .from('messages')
       .insert([{ content: message, sender: 'user' }])
@@ -30,7 +29,6 @@ export default function ChatPage() {
     setMessages(prev => [...prev, ...userMsg]);
     setMessage('');
 
-    // Fake AI reply for now (replace with real GPT later)
     const botReply = getBotReply(message);
 
     const { data: botMsg } = await supabase
@@ -41,11 +39,32 @@ export default function ChatPage() {
     setMessages(prev => [...prev, ...botMsg]);
   };
 
- const getBotReply = (input) => {
-  const msg = input.toLowerCase();
-  if (msg.includes('sad')) return "I'm here for you. Want to talk about it?";
-  if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊 How are you feeling today?";
-  if (msg.includes('happy')) return "Yay! I'm glad to hear that! 🌟";
-  return "Tell me more...";
-};
+  const getBotReply = (input) => {
+    const msg = input.toLowerCase();
+    if (msg.includes('sad')) return "I'm here for you. Want to talk about it?";
+    if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊 How are you feeling today?";
+    if (msg.includes('happy')) return "Yay! I'm glad to hear that! 🌟";
+    return "Tell me more...";
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl mb-4">MoodBot Chat</h1>
+      <div className="border p-2 h-64 overflow-y-scroll mb-4 bg-gray-50 rounded">
+        {messages.map((msg, i) => (
+          <div key={i} className={msg.sender === 'bot' ? 'text-green-600' : 'text-black'}>
+            <b>{msg.sender === 'bot' ? 'Bot' : 'You'}:</b> {msg.content}
+          </div>
+        ))}
+      </div>
+      <input
+        className="border p-2 w-full mb-2"
+        placeholder="Type a message..."
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+      />
+      <button className="bg-blue-500 text-white p-2 w-full rounded" onClick={sendMessage}>Send</button>
+    </div>
+  );
+}
 
