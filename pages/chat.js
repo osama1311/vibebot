@@ -10,7 +10,7 @@ export default function ChatPage() {
   }, []);
 
   const fetchMessages = async () => {
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from('messages')
       .select('*')
       .order('created_at', { ascending: true });
@@ -41,8 +41,8 @@ export default function ChatPage() {
 
   const getBotReply = (input) => {
     const msg = input.toLowerCase();
+    if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊";
     if (msg.includes('sad')) return "I'm here for you. Want to talk about it?";
-    if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊 How are you feeling today?";
     if (msg.includes('happy')) return "Yay! I'm glad to hear that! 🌟";
     return "Tell me more...";
   };
@@ -67,4 +67,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
 
