@@ -2,68 +2,83 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function ChatPage() {
-  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Supabase fetch error:', error.message);
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        console.error('Expected array from Supabase:', data);
+        return;
+      }
+
+      setMessages(data);
+      setLoading(false);
+    };
+
     fetchMessages();
   }, []);
 
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: true });
+  const handleSend = async () => {
+    if (!newMessage.trim()) return;
 
-    if (!error) setMessages(data);
-  };
+    const { error } = await supabase.from('messages').insert([
+      {
+        content: newMessage,
+        sender: 'user',
+      },
+    ]);
 
-  const sendMessage = async () => {
-    if (message.trim() === '') return;
+    if (error) {
+      console.error('Supabase insert error:', error.message);
+      return;
+    }
 
-    const { data: userMsg } = await supabase
-      .from('messages')
-      .insert([{ content: message, sender: 'user' }])
-      .select();
-
-    setMessages(prev => [...prev, ...userMsg]);
-    setMessage('');
-
-    const botReply = getBotReply(message);
-
-    const { data: botMsg } = await supabase
-      .from('messages')
-      .insert([{ content: botReply, sender: 'bot' }])
-      .select();
-
-    setMessages(prev => [...prev, ...botMsg]);
-  };
-
-  const getBotReply = (input) => {
-    const msg = input.toLowerCase();
-    if (msg.includes('hi') || msg.includes('hello')) return "Hey there! 😊";
-    if (msg.includes('sad')) return "I'm here for you. Want to talk about it?";
-    if (msg.includes('happy')) return "Yay! I'm glad to hear that! 🌟";
-    return "Tell me more...";
+    setMessages(prev => [...prev, { content: newMessage, sender: 'user' }]);
+    setNewMessage('');
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl mb-4">MoodBot Chat</h1>
-      <div className="border p-2 h-64 overflow-y-scroll mb-4 bg-gray-50 rounded">
-        {messages.map((msg, i) => (
-          <div key={i} className={msg.sender === 'bot' ? 'text-green-600' : 'text-black'}>
-            <b>{msg.sender === 'bot' ? 'Bot' : 'You'}:</b> {msg.content}
-          </div>
-        ))}
+    <div className="p-4 max-w-xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">MoodBot Chat</h1>
+
+      <div className="border p-4 h-96 overflow-y-auto mb-4 bg-gray-50 rounded">
+        {loading ? (
+          <p>Loading messages...</p>
+        ) : (
+          messages.map((msg, i) => (
+            <p key={i} className={msg.sender === 'user' ? 'text-right text-blue-600' : 'text-left text-green-600'}>
+              {msg.sender === 'user' ? 'You' : 'Bot'}: {msg.content}
+            </p>
+          ))
+        )}
       </div>
-      <input
-        className="border p-2 w-full mb-2"
-        placeholder="Type a message..."
-        value={message}
-        onChange={e => setMessage(e.target.value)}
-      />
-      <button className="bg-blue-500 text-white p-2 w-full rounded" onClick={sendMessage}>Send</button>
+
+      <div className="flex gap-2">
+        <input
+          className="flex-1 border rounded p-2"
+          placeholder="Type your message..."
+          value={newMessage}
+          onChange={e => setNewMessage(e.target.value)}
+        />
+        <button
+          onClick={handleSend}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }
