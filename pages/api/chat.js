@@ -1,6 +1,9 @@
 export default async function handler(req, res) {
   const { message, personality } = req.body;
 
+  // ✅ Debug: log the received message
+  console.log("📥 Received message:", message, "with personality:", personality);
+
   const prompt = personality
     ? `You are a ${personality} chatbot. Respond to the user naturally.\nUser: ${message}`
     : message;
@@ -22,9 +25,14 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+
+    // ✅ Debug: log the OpenAI response
+    console.log("🤖 OpenAI response:", data);
+
     const reply = data.choices?.[0]?.message?.content || "Sorry, I didn’t understand that.";
     res.status(200).json({ reply });
   } catch (err) {
+    console.error("❌ Error in /api/chat:", err);
     res.status(500).json({ error: 'Failed to fetch reply.' });
   }
 }
